@@ -1,4 +1,5 @@
 "use client";
+import { TestnetEscrow } from "@/components/testnet-escrow";
 
 import { useEffect, useState } from "react";
 import {
@@ -234,7 +235,7 @@ export default function Workspace() {
           )}
         </header>
         <div className="demo-bar">
-          <strong>Development workspace · payments are not connected</strong>
+          <strong>Development workspace · testnet tokens only</strong>
           <span>Agreements are saved to your account</span>
         </div>
         <main id="main">
@@ -639,14 +640,16 @@ export default function Workspace() {
                       </div>
                       {bothAccepted && (
                         <p className="policy-note">
-                          Both participants accepted these development terms. No
-                          funds have moved. Stellar funding is not connected;
-                          the separate payment demo uses fictional data.
+                          Both participants accepted these development terms.
+                          Acceptance alone does not fund the milestone. Use the
+                          testnet escrow section to verify wallets and authorize
+                          test-token transactions.
                         </p>
                       )}
                       {project.fundingStarted && (
                         <p className="policy-note">
-                          Funding has started; this agreement is locked.
+                          Escrow preparation has locked this agreement. Check
+                          the testnet panel for verified funding status.
                         </p>
                       )}
                       {!current && (
@@ -708,6 +711,14 @@ export default function Workspace() {
                       </fieldset>
                     </>
                   )}
+                  {current && (
+                    <TestnetEscrow
+                      key={project.id}
+                      project={project}
+                      userId={user.id}
+                      onChange={() => loadProject(project.id)}
+                    />
+                  )}
                   {project.versions.length > 1 && (
                     <section className="panel agreement-review">
                       <h2>Previous versions</h2>
@@ -735,7 +746,7 @@ export default function Workspace() {
           )}
           <footer>
             <span>AccordBridge Labs · Development workspace</span>
-            <span>Saved agreements · no live payments</span>
+            <span>Saved agreements · no mainnet payments</span>
           </footer>
         </main>
       </div>

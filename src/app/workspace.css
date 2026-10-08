@@ -155,3 +155,38 @@
     font-size: 26px;
   }
 }
+
+.testnet-card > p {
+  margin-bottom: 16px;
+}
+.testnet-card .button-row {
+  margin: 18px 0;
+}
+.testnet-card code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-size: 11px;
+}
+.wallet-details {
+  padding: 16px 0;
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.testnet-card .terms-grid code {
+  display: block;
+  margin-top: 6px;
+}
+.testnet-card details p a {
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.testnet-card .confirmation p {
+  margin: 12px 0;
+}
+.testnet-card .policy-note .secondary {
+  margin: 12px 0;
+}
+.testnet-card summary {
+  cursor: pointer;
+}
