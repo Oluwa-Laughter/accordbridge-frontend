@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("create and revise an agreement with dynamic amounts and fresh acceptance", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/demo");
   await page
     .getByRole("button", { name: "Create agreement", exact: true })
     .click();
@@ -132,7 +132,7 @@ test("both parties complete the agreement, funding, revision and payout journey"
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/demo");
   await expect(
     page.getByText("Demo — sample data, no real payments"),
   ).toBeVisible();
@@ -216,7 +216,7 @@ test("both parties complete the agreement, funding, revision and payout journey"
 });
 
 test("disputes retain funds and responsive layout fits", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/demo");
   await page.getByRole("button", { name: "03 Client review" }).click();
   await page.getByRole("button", { name: "Open dispute", exact: true }).click();
   await expect(
