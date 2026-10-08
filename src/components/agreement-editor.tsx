@@ -8,27 +8,35 @@ export function AgreementEditor({
   onSave,
   onPublish,
   creating,
+  persistent = false,
+  participants,
 }: {
   draft: Agreement;
   onChange: (draft: Agreement) => void;
   onSave: () => void;
   onPublish: () => void;
   creating: boolean;
+  persistent?: boolean;
+  participants?: string;
 }) {
   const [errors, setErrors] = useState<string[]>([]);
   const field = <K extends keyof Agreement>(key: K, value: Agreement[K]) =>
     onChange({ ...draft, [key]: value });
   return (
     <section className="panel agreement-editor" aria-labelledby="editor-title">
-      <span className="eyebrow">SAMPLE AGREEMENT BUILDER</span>
+      <span className="eyebrow">
+        {persistent ? "PROJECT AGREEMENT BUILDER" : "SAMPLE AGREEMENT BUILDER"}
+      </span>
       <h2 id="editor-title">
         {creating
           ? "Create a project agreement"
           : "Propose a new agreement version"}
       </h2>
       <p>
-        Maya is the sample client; Tobi is the sample freelancer. All dates use
-        WAT (UTC+1), at 17:00. Use fictional details only.
+        {participants ??
+          "Maya is the sample client; Tobi is the sample freelancer."}{" "}
+        All dates use WAT (UTC+1), at 17:00. This is a development workspace;
+        use fictional work details.
       </p>
       {creating && (
         <p className="policy-note">
@@ -207,8 +215,10 @@ export function AgreementEditor({
           </button>
         </div>
         <p className="small">
-          Drafts last for this browser session in memory only. Refreshing clears
-          them. Sending resets both acceptances; it does not fund any work.
+          {persistent
+            ? "Save draft stores your edits privately in your account. Sending publishes a new version for your partner to review."
+            : "Drafts last for this browser session in memory only. Refreshing clears them."}{" "}
+          Sending resets both acceptances; it does not fund any work.
         </p>
       </form>
     </section>

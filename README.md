@@ -1,55 +1,40 @@
 # AccordBridge Frontend
 
-**Status: local interactive prototype.** Next.js, React, TypeScript, and Tailwind CSS are configured. The application uses synthetic data and in-memory state; refreshing resets the demo. No backend, wallet connection, blockchain integration, or deployment is configured.
-
-AccordBridge is a proposed Stellar USDC workspace for clients and freelancers to agree on work, fund milestones, submit deliverables, and resolve payment decisions.
-
-## Responsibility
-
-- Account onboarding and Stellar wallet connection.
-- Agreement creation, comparison, and acceptance.
-- Project dashboard and milestone workspace.
-- Funding, approval, release, and refund transaction confirmation.
-- Work submission, revision requests, and funded scope changes.
-- Private dispute evidence and resolution status.
-- Accessible, responsive layouts and clear transaction states.
-
-Vercel is the intended frontend host. Hosting plan, project creation, custom domain, and deployment are not configured. Wallet libraries remain to be selected.
+**Status: connected local development workspace.** Next.js, React, TypeScript and Tailwind CSS provide authenticated projects backed by the NestJS/PostgreSQL service. The separate `/demo` route retains the sample payment simulator. No wallet connection, blockchain integration or hosted deployment is configured.
 
 ## Run locally
 
-Use a supported Node.js LTS release compatible with Next.js 16 (Node 22 or 24 recommended).
+Use Node.js 22.12+ or Node 24 LTS. First start the sibling [backend](https://github.com/accordbridge-labs/accordbridge-backend) following its README, including database setup and migrations.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. The server binds to your machine's loopback interface.
+Open http://127.0.0.1:3000. The frontend proxies `/api` to `http://127.0.0.1:4000` by default. To change that server-side target, copy `.env.example` to `.env.local` and set `BACKEND_URL`. Never expose it as a `NEXT_PUBLIC` variable. The backend's `FRONTEND_ORIGIN` must exactly match the browser origin; `localhost` and `127.0.0.1` are different origins.
 
-## Try the first implementation
+Vercel remains the intended frontend host. Hosting, domains, production proxy/cookie configuration and backend deployment are not configured.
 
-1. Open the project workspace and accept agreement v1 as Maya.
-2. Switch the demo role to Tobi and accept the same version.
-3. Switch back to Maya, simulate funding, then separately confirm its result. The unknown-outcome branch checks the existing transaction instead of offering another deposit.
-4. Switch to Tobi and submit the sample design. Switch to Maya to request a revision, approve, or open a dispute.
-5. After approval, separately confirm the simulated payout and view the itemized receipt.
+## Try the persistent workspace
 
-The scenario controls load an agreement, funded work, or a submitted design. The demo role switch is for presentation only and is not authentication. No wallet permissions, private keys, files, or payments are collected. Use sample text only.
+1. Create an account with a name, email and a password of at least 12 characters. Email is a login identifier; email verification and recovery are not yet available.
+2. Have your project partner register in a different browser profile or private window. Each account can reveal its ID with **Show my account ID**.
+3. Choose **New project**, supply the other account ID, and choose your role. Roles and participants are fixed after creation. No invitation email is sent.
+4. Enter milestones, dates, scope and acceptance criteria. **Save draft & close** saves a private draft to your account; refresh and resume it to verify persistence.
+5. **Send for review** publishes an immutable version for both participants. Each must sign in to their own account to accept. There is no role switch in the saved workspace.
+6. **Propose changes** publishes a new version with fresh acceptance required. Previous versions retain their own acceptance records. A stale save or acceptance receives a conflict rather than silently overwriting newer terms.
 
-Implemented: overview, editable agreements and milestones, in-memory drafts, proposal version history, acceptance by both parties, funding/payout states, immutable submission versions, revision requests, pending dispute case, sample receipt, and responsive navigation. Funding and receipts use the current agreement's first milestone amount.
+The workspace supports multiple projects. Only participants see their projects, and each author's unpublished drafts remain private. Sessions use HttpOnly cookies, not browser storage tokens. Sign-out revokes the server session. Edited text is not saved until a save or publish request succeeds; unsaved edits are lost on refresh. A conflict keeps the editor visible and offers an explicit reload/discard action.
 
-Not implemented: paid changes to funded work, cancellation/refund settlement, review timers, real resolver operations, notifications, persistence, or production authorization. The funding-to-payout simulation covers the first milestone only; later milestones remain unfunded. Disputes stop at a visibly pending decision. The blueprint describes the broader target; this prototype does not complete every scenario.
+Accounts and agreement data persist in PostgreSQL. Funding, deliverable submission, review and payouts are not connected to this saved workspace yet. Agreements currently use proposed development terms, not final live escrow policies. No funds move when accepting.
 
-## Create and revise an agreement
+## Payment demo
 
-Choose **Create agreement** from Overview. Enter project details, add up to ten milestones with prices, deliverables, acceptance criteria and dates, then set exclusions, revision rounds and the review window. Participants remain the fictional Maya and Tobi; dates use 17:00 WAT (UTC+1).
+Open `/demo` or **Explore payment demo**. It has fictional Maya/Tobi role controls and a single replaceable sample project. All its data stays in memory and resets on refresh. Nothing from this route is imported into your saved projects, and simulated payment states never update the backend.
 
-**Save draft & close** keeps incomplete edits in memory without changing the published agreement. **Resume saved draft** reopens them. **Send for review** validates required fields and publishes the proposal. Creating a project replaces the current project in this single-project demo; the editor displays this before publishing. Refreshing or resetting clears drafts.
+The demo covers editable agreements, acceptance, the first milestone's simulated funding, versioned submissions, revisions, approval, payout confirmation and receipt. Unknown funding outcomes cannot start another deposit. Disputes retain funds and stop at a pending decision. Later milestones remain unfunded. Paid scope changes, cancellation settlement and review timers remain outstanding.
 
-Before funding starts, either demo role can use **Propose changes**. A changed proposal creates the next version, preserves the old terms and acceptance record, and clears both current acceptances. Stale-version acceptance is rejected. Both parties must accept the new version before funding becomes available. Once funding starts, terms are locked; a separate paid-change workflow remains to be implemented.
-
-Prototype prices allow two decimal places and use integer cents for calculations. The illustrative 0.3% fee rounds to cents. This is a presentation rule, not a specification of Stellar asset precision or a provider's actual fee calculation. Resolver, cancellation, appeal and final pricing terms remain unresolved and cannot be accepted as live terms.
+Demo prices use integer cents for display calculations and a 0.3% illustrative provider fee rounded to cents. This is not a specification of Stellar asset precision or deployed contract fee logic. Resolver, cancellation, appeal and final pricing terms remain unresolved.
 
 ## Checks
 
@@ -59,26 +44,25 @@ npm test
 npm run build
 npx playwright install chromium
 npm run test:e2e
+npm run test:workspace
 ```
 
-Browser tests start the production build on port 3100 and cover the acceptance-to-payout journey with a revision, unknown funding outcomes, and held disputed funds on desktop and mobile viewports. Run `npm run build` before browser tests.
+The demo suite starts the production frontend on port 3100. The connected suite requires the sibling backend to be built, `.env.test` configured for its isolated test database, and PostgreSQL running. It starts a separate API on port 4100 and a frontend proxy on port 3100; the development services remain untouched. Run these two browser suites sequentially because they use the same frontend test port.
 
-The pure demo reducer tests financial-state transitions and role restrictions. It does not validate an escrow contract or provide a security boundary for live money.
+Connected browser checks use two authenticated accounts to save/resume drafts across refresh, publish and accept versions, revise terms, sign out and sign back in on desktop and mobile Chromium viewports. Test fixtures are synthetic and stay only in the test database. Backend tests separately verify access denial, conflicts, session revocation and persistence across an application restart.
 
-## Boundaries
+## Implementation boundaries
 
-Wallets sign user transactions; the browser must not send private keys to our backend. An API response or a wallet signature alone must never be presented as confirmed funding. Escrow balances and final transaction outcomes must be reconciled with Stellar.
+The frontend sends no caller role or user ID when accepting; the API derives both from the authenticated session and project membership. The same-origin proxy forwards only the required cookie, JSON, origin and anti-CSRF headers. Backend errors remain visible; an HTTP response is never presented as a chain payment.
+
+Email verification, password recovery, invitations, account deletion, file uploads, real wallet ownership, payments, notifications and production operations are not implemented. Keep this as a local development service until those launch decisions and operational controls are reviewed.
 
 ## Documents
 
 - [Screen blueprint](docs/SCREENS.md)
 - [Detailed prototype blueprint](docs/PROTOTYPE-BLUEPRINT.md)
 - [Canonical product specification](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/PRODUCT.md)
-- [System architecture](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/ARCHITECTURE.md)
+- [API contract](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/openapi.json)
 - [Contract evaluation](https://github.com/accordbridge-labs/accordbridge-contracts)
 
-## First milestone
-
-Produce a clickable, synthetic-data prototype covering success, revision, extra work, client silence, cancellation, and dispute settlement. It must not represent simulated balances as real deposits.
-
-See this repository's planning issues. License selection is pending.
+License selection is pending.

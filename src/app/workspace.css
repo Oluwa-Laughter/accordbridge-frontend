@@ -1,0 +1,157 @@
+.saved-workspace .auth-card {
+  max-width: 560px;
+  padding: 30px;
+  margin: 25px auto;
+}
+.saved-workspace .auth-card h1 {
+  font-size: 29px;
+}
+.saved-workspace .auth-card > p {
+  margin: 12px 0 22px;
+}
+.saved-workspace label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 17px 0;
+}
+.saved-workspace input,
+.saved-workspace select {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd8ce;
+  border-radius: 6px;
+  background: white;
+  font: inherit;
+  color: var(--ink);
+  margin-top: 7px;
+}
+.saved-workspace input:focus-visible {
+  outline: 3px solid #258371;
+  outline-offset: 3px;
+}
+.saved-workspace fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.saved-workspace fieldset:disabled {
+  opacity: 0.65;
+}
+.saved-workspace .auth-card .small {
+  margin: 14px 0 20px;
+}
+.saved-workspace .auth-card .primary {
+  margin-top: 8px;
+}
+.saved-workspace .account-name {
+  align-self: center;
+  font-size: 12px;
+}
+.workspace-error {
+  border: 1px solid #b86f58;
+  background: #fff3ee;
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 20px;
+  color: #783d28;
+  font-size: 13px;
+}
+.workspace-error p {
+  color: inherit;
+  margin-bottom: 10px;
+}
+.workspace-error .secondary {
+  margin-top: 12px;
+}
+.workspace-notice {
+  padding: 15px 20px;
+  background: #e7f1e8;
+  border: 1px solid #b5d0ba;
+  color: #285d3d;
+  border-radius: 7px;
+  margin-bottom: 20px;
+}
+.saved-workspace .account-card {
+  padding: 24px;
+}
+.account-card p {
+  font-size: 13px;
+  margin: 10px 0 15px;
+}
+.account-card .account-id strong,
+.account-id code {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.saved-workspace .create-project {
+  max-width: none;
+  margin: 20px 0;
+}
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+.saved-workspace .agreement-total {
+  margin: 20px 0;
+}
+.saved-workspace .acceptances {
+  margin: 20px 0;
+}
+.saved-workspace .agreement-editor fieldset {
+  border: 1px solid #dce4df;
+  padding: 18px;
+  margin: 22px 0;
+}
+.saved-workspace .agreement-editor label {
+  font-size: 12px;
+}
+.saved-workspace .project-row .project-name {
+  min-width: 0;
+}
+.saved-workspace .project-row {
+  overflow-wrap: anywhere;
+}
+.saved-workspace .button-row {
+  align-items: center;
+}
+.saved-workspace .agreement-summary > p {
+  white-space: pre-wrap;
+}
+.saved-workspace .auth-card fieldset:disabled button {
+  cursor: wait;
+}
+@media (max-width: 760px) {
+  .saved-workspace .auth-card {
+    padding: 22px;
+    margin: 18px 0;
+  }
+  .saved-workspace .topbar {
+    height: auto;
+    min-height: 60px;
+    gap: 12px;
+  }
+  .saved-workspace .demo-bar {
+    font-size: 11px;
+  }
+  .saved-workspace .account-name {
+    max-width: 100px;
+    overflow-wrap: anywhere;
+  }
+  .editor-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .saved-workspace .account-card {
+    padding: 20px;
+  }
+  .saved-workspace .auth-card h1 {
+    font-size: 26px;
+  }
+}
