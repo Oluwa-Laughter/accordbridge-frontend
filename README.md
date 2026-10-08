@@ -23,6 +23,7 @@ Wallets sign user transactions; the browser must not send private keys to our ba
 ## Documents
 
 - [Screen blueprint](docs/SCREENS.md)
+- [Detailed prototype blueprint](docs/PROTOTYPE-BLUEPRINT.md)
 - [Canonical product specification](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/PRODUCT.md)
 - [System architecture](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/ARCHITECTURE.md)
 - [Contract evaluation](https://github.com/accordbridge-labs/accordbridge-contracts)

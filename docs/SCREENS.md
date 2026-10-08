@@ -2,6 +2,8 @@
 
 These are proposed screens, not implemented functionality.
 
+See [the detailed prototype blueprint](PROTOTYPE-BLUEPRINT.md) for layouts, role-specific actions, example amounts, confirmation copy, and failure states.
+
 | Screen | Primary actions | Required states |
 | --- | --- | --- |
 | Account setup | Create account, connect and verify wallet | Disconnected, signing, rejected, verified; wrong network |
