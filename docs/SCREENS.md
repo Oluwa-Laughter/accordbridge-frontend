@@ -1,6 +1,6 @@
 # Screen blueprint
 
-These are proposed screens, not implemented functionality.
+These are target screens and behaviours. A first subset now exists in the local prototype; see the [README](../README.md) for the implementation boundary.
 
 See [the detailed prototype blueprint](PROTOTYPE-BLUEPRINT.md) for layouts, role-specific actions, example amounts, confirmation copy, and failure states.
 
