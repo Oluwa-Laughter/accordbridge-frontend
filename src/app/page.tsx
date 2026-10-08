@@ -26,6 +26,12 @@ import {
   stageLabels,
 } from "@/lib/demo";
 
+import { Agreement, emptyAgreement, payout, total } from "@/lib/agreement";
+import {
+  AgreementEditor,
+  AgreementSummary,
+} from "@/components/agreement-editor";
+
 type View =
   "Overview" | "Project workspace" | "Wallet & receipts" | "Resolution centre";
 const navigation = [
@@ -33,11 +39,6 @@ const navigation = [
   { name: "Project workspace" as const, icon: FolderKanban },
   { name: "Wallet & receipts" as const, icon: Wallet },
   { name: "Resolution centre" as const, icon: Scale },
-];
-const criteria = [
-  "Five agreed page layouts",
-  "Desktop and mobile designs",
-  "Named page sections present",
 ];
 const money = (value: number) =>
   value.toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -54,6 +55,16 @@ export default function Home() {
   const [feedback, setFeedback] = useState("");
   const [tab, setTab] = useState<"scope" | "submissions" | "activity">("scope");
   const [approvalOpen, setApprovalOpen] = useState(false);
+  const [draft, setDraft] = useState<Agreement | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [draftVersion, setDraftVersion] = useState(1);
+  const agreement = state.agreement;
+  const milestone = agreement.milestones[0];
+  const payment = payout(milestone.amount);
+  const projectTotal = total(agreement);
+  const criteria = milestone.criteria.split("\n").filter((line) => line.trim());
+  const canEdit = ["agreement", "unfunded"].includes(state.stage);
   const funds = balances(state);
   const name = role === "client" ? "Maya" : "Tobi";
   const isPending = [
@@ -79,6 +90,8 @@ export default function Home() {
     setApprovalOpen(false);
     setFeedback("");
     setTab("scope");
+    setDraft(null);
+    setEditorOpen(false);
   }
 
   const actionPanel = (
@@ -91,9 +104,9 @@ export default function Home() {
         {state.stage === "agreement"
           ? "Good work starts with a clear agreement."
           : state.stage === "unfunded"
-            ? "Give the design milestone a green light."
+            ? `Give ${milestone.name} a green light.`
             : state.stage === "working"
-              ? "The design milestone is ready to start."
+              ? `${milestone.name} is ready to start.`
               : state.stage === "review"
                 ? "A little feedback. A big step forward."
                 : state.stage === "revision"
@@ -108,17 +121,17 @@ export default function Home() {
         {state.stage === "agreement"
           ? "Maya and Tobi must accept the same version before funding. Review the scope and sample terms in the workspace."
           : state.stage === "unfunded"
-            ? "150 USDC funds design only. Development and handover stay unfunded."
+            ? `${money(payment.gross)} USDC funds ${milestone.name} only. Other milestones stay unfunded.`
             : state.stage === "working"
-              ? "150 USDC is held in the simulated design escrow. Tobi can submit a version for Maya to review."
+              ? `${money(payment.gross)} USDC is held in the simulated milestone escrow. Tobi can submit a version for Maya to review.`
               : state.stage === "review"
                 ? "Review the latest submission against the agreed criteria. Approve it, request a specific revision, or ask for a reviewer."
                 : state.stage === "revision"
                   ? state.feedback
                   : state.stage === "released"
-                    ? "The sample payout is confirmed. Development and handover still need their own funding."
+                    ? "The sample payout is confirmed. Any remaining milestones still need their own funding."
                     : state.stage === "disputed"
-                      ? "150 USDC remains held. This demo stops at a pending reviewer decision; no settlement is implied."
+                      ? `${money(payment.gross)} USDC remains held. This demo stops at a pending reviewer decision; no settlement is implied.`
                       : "A submitted transaction is not a confirmed payment. Use the demo control below to simulate checking its result."}
       </p>
       <div className="action-footer">
@@ -140,16 +153,26 @@ export default function Home() {
             <>
               <div className="acceptances">
                 <span>
-                  {state.accepted.client ? "✓" : "○"} Maya accepted v1
+                  {state.accepted.client ? "✓" : "○"} Maya{" "}
+                  {state.accepted.client ? "accepted" : "has not accepted"} v
+                  {state.agreementVersion}
                 </span>
                 <span>
-                  {state.accepted.freelancer ? "✓" : "○"} Tobi accepted v1
+                  {state.accepted.freelancer ? "✓" : "○"} Tobi{" "}
+                  {state.accepted.freelancer ? "accepted" : "has not accepted"}{" "}
+                  v{state.agreementVersion}
                 </span>
               </div>
               <button
                 className="primary"
-                disabled={state.accepted[role]}
-                onClick={() => dispatch({ type: "accept", role })}
+                disabled={state.accepted[role] || editorOpen}
+                onClick={() =>
+                  dispatch({
+                    type: "accept",
+                    role,
+                    version: state.agreementVersion,
+                  })
+                }
               >
                 {state.accepted[role]
                   ? "Accepted · waiting for the other party"
@@ -168,16 +191,18 @@ export default function Home() {
                   Asset <strong>Sample USDC · Stellar demo</strong>
                 </span>
                 <span>
-                  Destination <strong>DEMO-DESIGN-ESCROW</strong>
+                  Destination <strong>DEMO-MILESTONE-ESCROW</strong>
                 </span>
                 <span>
-                  Gross deposit <strong>150 USDC</strong>
+                  Gross deposit <strong>{money(payment.gross)} USDC</strong>
                 </span>
                 <span>
-                  Illustrative payout fee <strong>0.45 USDC (0.3%)</strong>
+                  Illustrative payout fee{" "}
+                  <strong>{money(payment.fee)} USDC (0.3%)</strong>
                 </span>
                 <span>
-                  Illustrative net payout <strong>149.55 USDC</strong>
+                  Illustrative net payout{" "}
+                  <strong>{money(payment.net)} USDC</strong>
                 </span>
               </div>
               <p className="small">
@@ -190,7 +215,8 @@ export default function Home() {
                   className="primary"
                   onClick={() => dispatch({ type: "fund", role })}
                 >
-                  Simulate funding · 150 USDC <ArrowRight size={16} />
+                  Simulate funding · {money(payment.gross)} USDC{" "}
+                  <ArrowRight size={16} />
                 </button>
               ) : (
                 <p>Waiting for Maya to fund this milestone.</p>
@@ -244,8 +270,8 @@ export default function Home() {
                   onChange={(event) => setNotes(event.target.value)}
                 />
                 <p className="small">
-                  Sample reference: Northstar design pack. No file is uploaded.
-                  Each submission creates a new version.
+                  Sample reference: {milestone.name} delivery pack. No file is
+                  uploaded. Each submission creates a new version.
                 </p>
                 <button className="primary" disabled={!notes.trim()}>
                   Submit work · v{state.submissions.length + 1}{" "}
@@ -258,7 +284,9 @@ export default function Home() {
               <div className="submission-preview">
                 <FileCheck2 size={20} />
                 <div>
-                  <strong>Design submission v{state.submissions.length}</strong>
+                  <strong>
+                    {milestone.name} submission v{state.submissions.length}
+                  </strong>
                   <p>{state.submissions.at(-1)?.notes}</p>
                 </div>
               </div>
@@ -286,8 +314,9 @@ export default function Home() {
                 >
                   <h3>Authorize the sample payout?</h3>
                   <p>
-                    150 USDC gross − 0.45 USDC illustrative fee = 149.55 USDC
-                    net to Tobi. Approval starts the payout process; it does not
+                    {money(payment.gross)} USDC gross − {money(payment.fee)}{" "}
+                    USDC illustrative fee = {money(payment.net)} USDC net to
+                    Tobi. Approval starts the payout process; it does not
                     confirm payment.
                   </p>
                   <div className="button-row">
@@ -459,7 +488,7 @@ export default function Home() {
                 {view === "Overview"
                   ? `A clear view, ${name}.`
                   : view === "Project workspace"
-                    ? "Northstar website"
+                    ? agreement.title
                     : view === "Wallet & receipts"
                       ? "Every milestone accounted for."
                       : "Room for a fair resolution."}
@@ -468,7 +497,7 @@ export default function Home() {
                 {view === "Overview"
                   ? "Good agreements. Funded milestones. More room to do great work."
                   : view === "Project workspace"
-                    ? "Five pages. One shared plan. A better website for Northstar Studio."
+                    ? agreement.description
                     : view === "Wallet & receipts"
                       ? "Keep available funds, held funds, and completed payments separate."
                       : "Bring the agreed scope and the work into the same conversation."}
@@ -478,12 +507,14 @@ export default function Home() {
               <button
                 className="secondary"
                 onClick={() => {
-                  reset("new");
+                  setDraft(emptyAgreement());
+                  setCreating(true);
+                  setEditorOpen(true);
                   setView("Project workspace");
                 }}
               >
                 <Plus size={17} />
-                Start sample agreement
+                Create agreement
               </button>
             )}
           </div>
@@ -525,9 +556,11 @@ export default function Home() {
                 Total project value <FolderKanban size={17} />
               </span>
               <strong>
-                600 <small>USDC</small>
+                {money(projectTotal)} <small>USDC</small>
               </strong>
-              <p>3 milestones in the sample agreement</p>
+              <p>
+                {agreement.milestones.length} milestones in the sample agreement
+              </p>
             </div>
             <div className="stat">
               <span>
@@ -538,7 +571,7 @@ export default function Home() {
               </strong>
               <p>
                 {funds.disputed
-                  ? "Includes 150 USDC under dispute"
+                  ? `Includes ${money(funds.disputed)} USDC under dispute`
                   : "Confirmed sample funds only"}
               </p>
             </div>
@@ -564,7 +597,7 @@ export default function Home() {
               </strong>
               <p>
                 {funds.released
-                  ? "149.55 USDC net after illustrative fee"
+                  ? `${money(payment.net)} USDC net after illustrative fee`
                   : "No confirmed sample payouts yet"}
               </p>
             </div>
@@ -589,12 +622,12 @@ export default function Home() {
                     N<span>✦</span>
                   </span>
                   <span className="project-name">
-                    <strong>Northstar website</strong>
-                    <span>Maya & Tobi · Design milestone</span>
+                    <strong>{agreement.title}</strong>
+                    <span>Maya & Tobi · {milestone.name} milestone</span>
                   </span>
                   <span className="badge">{stageLabels[state.stage]}</span>
                   <span className="project-total">
-                    600 USDC<small>Project total</small>
+                    {money(projectTotal)} USDC<small>Project total</small>
                   </span>
                   <ArrowUpRight size={20} />
                 </button>
@@ -609,6 +642,106 @@ export default function Home() {
             </>
           )}
           {view === "Project workspace" && (
+            <>
+              <section className="panel agreement-review">
+                <div className="section-heading">
+                  <h2>Agreement v{state.agreementVersion}</h2>
+                  {canEdit && (
+                    <button
+                      className="secondary"
+                      onClick={() => {
+                        setDraft(structuredClone(agreement));
+                        setDraftVersion(state.agreementVersion);
+                        setCreating(false);
+                        setEditorOpen(true);
+                      }}
+                    >
+                      Propose changes
+                    </button>
+                  )}
+                </div>
+                {!canEdit && (
+                  <p className="policy-note">
+                    This agreement is locked because funding has started.
+                    Changes to funded work require a separate scope-change
+                    agreement.
+                  </p>
+                )}
+                {draft && !editorOpen && (creating || canEdit) && (
+                  <button
+                    className="secondary"
+                    onClick={() => setEditorOpen(true)}
+                  >
+                    Resume saved draft
+                  </button>
+                )}
+                <details>
+                  <summary>
+                    Review all milestones and terms · v{state.agreementVersion}
+                  </summary>
+                  <AgreementSummary agreement={agreement} />
+                </details>
+                <p className="small">
+                  Maya:{" "}
+                  {state.accepted.client ? "accepted" : "awaiting acceptance"} v
+                  {state.agreementVersion} · Tobi:{" "}
+                  {state.accepted.freelancer
+                    ? "accepted"
+                    : "awaiting acceptance"}{" "}
+                  v{state.agreementVersion}
+                </p>
+                {state.history.length > 0 && (
+                  <div className="version-history">
+                    <h3>Previous versions</h3>
+                    {state.history.map((record) => (
+                      <details key={record.version}>
+                        <summary>
+                          Agreement v{record.version} ·{" "}
+                          {money(total(record.agreement))} USDC · superseded
+                        </summary>
+                        <p className="small">
+                          Maya:{" "}
+                          {record.accepted.client ? "accepted" : "not accepted"}{" "}
+                          · Tobi:{" "}
+                          {record.accepted.freelancer
+                            ? "accepted"
+                            : "not accepted"}
+                          . These acceptances do not apply to the current
+                          version.
+                        </p>
+                        <AgreementSummary agreement={record.agreement} />
+                      </details>
+                    ))}
+                  </div>
+                )}
+              </section>
+              {editorOpen && draft && (
+                <AgreementEditor
+                  draft={draft}
+                  onChange={setDraft}
+                  creating={creating}
+                  onSave={() => setEditorOpen(false)}
+                  onPublish={() => {
+                    dispatch(
+                      creating
+                        ? { type: "create-agreement", agreement: draft }
+                        : {
+                            type: "publish-agreement",
+                            agreement: draft,
+                            version: draftVersion,
+                          },
+                    );
+                    setEditorOpen(false);
+                    setDraft(null);
+                    setApprovalOpen(false);
+                    setFeedback("");
+                    setTab("scope");
+                  }}
+                />
+              )}
+            </>
+          )}
+          {view === "Project workspace" && !editorOpen && (
             <div className="project-layout">
               <div>
                 {actionPanel}
@@ -638,16 +771,13 @@ export default function Home() {
                   {tab === "scope" && (
                     <div className="tab-content">
                       <span className="eyebrow">
-                        AGREEMENT V1 · SAMPLE TERMS
+                        AGREEMENT V{state.agreementVersion} · SAMPLE TERMS
                       </span>
-                      <h2>Design the foundation.</h2>
-                      <p>
-                        Create the Home, About, Services, Work, and Contact page
-                        layouts for Northstar Studio.
-                      </p>
+                      <h2>{milestone.name}</h2>
+                      <p>{milestone.scope}</p>
                       <ul className="criteria">
-                        {criteria.map((item) => (
-                          <li key={item}>
+                        {criteria.map((item, index) => (
+                          <li key={index}>
                             <FileCheck2 size={17} />
                             {item}
                           </li>
@@ -656,19 +786,25 @@ export default function Home() {
                       <div className="terms-grid">
                         <div>
                           <span>Included revisions</span>
-                          <strong>2 rounds · proposed</strong>
+                          <strong>
+                            {agreement.revisions} rounds · proposed
+                          </strong>
                         </div>
                         <div>
                           <span>Delivery target</span>
-                          <strong>15 Oct 2026, 17:00 WAT (UTC+1)</strong>
+                          <strong>
+                            {milestone.dueDate}, 17:00 WAT (UTC+1)
+                          </strong>
                         </div>
                         <div>
                           <span>Review period</span>
-                          <strong>7 calendar days · proposed</strong>
+                          <strong>
+                            {agreement.reviewDays} calendar days · proposed
+                          </strong>
                         </div>
                         <div>
                           <span>Out of scope</span>
-                          <strong>Online store and copywriting</strong>
+                          <strong>{agreement.exclusions}</strong>
                         </div>
                       </div>
                       <p className="policy-note">
@@ -699,7 +835,7 @@ export default function Home() {
                             <span className="badge">
                               Version {submission.version}
                             </span>
-                            <h3>Northstar design pack</h3>
+                            <h3>{milestone.name} delivery pack</h3>
                             <p>{submission.notes}</p>
                             <span className="muted small">
                               Synthetic reference · no uploaded files
@@ -724,25 +860,21 @@ export default function Home() {
               <aside className="panel milestone-panel">
                 <div className="section-heading">
                   <h2>The milestones</h2>
-                  <span className="tiny-pill">3</span>
+                  <span className="tiny-pill">
+                    {agreement.milestones.length}
+                  </span>
                 </div>
-                {[
-                  {
-                    name: "Design",
-                    amount: 150,
-                    status: stageLabels[state.stage],
-                  },
-                  { name: "Development", amount: 300, status: "Unfunded" },
-                  { name: "Handover", amount: 150, status: "Unfunded" },
-                ].map((milestone, index) => (
+                {agreement.milestones.map((milestone, index) => (
                   <div
                     className={`milestone ${index === 0 ? "current" : ""}`}
-                    key={milestone.name}
+                    key={index}
                   >
                     <span className="milestone-number">{index + 1}</span>
                     <div>
                       <strong>{milestone.name}</strong>
-                      <span>{milestone.status}</span>
+                      <span>
+                        {index === 0 ? stageLabels[state.stage] : "Unfunded"}
+                      </span>
                     </div>
                     <strong>
                       {milestone.amount}
@@ -752,7 +884,7 @@ export default function Home() {
                 ))}
                 <div className="milestone-total">
                   <span>Project total</span>
-                  <strong>600 USDC</strong>
+                  <strong>{money(projectTotal)} USDC</strong>
                 </div>
                 <div className="scope-note">
                   <Link2 size={21} />
@@ -783,7 +915,7 @@ export default function Home() {
               </div>
               {state.stage === "released" ? (
                 <>
-                  <h3>Design milestone · confirmed sample receipt</h3>
+                  <h3>{milestone.name} milestone · confirmed sample receipt</h3>
                   <dl className="receipt">
                     <div>
                       <dt>Transaction reference</dt>
@@ -791,7 +923,9 @@ export default function Home() {
                     </div>
                     <div>
                       <dt>Project / agreement</dt>
-                      <dd>Northstar website / v1</dd>
+                      <dd>
+                        {agreement.title} / v{state.agreementVersion}
+                      </dd>
                     </div>
                     <div>
                       <dt>Recipient</dt>
@@ -803,11 +937,11 @@ export default function Home() {
                     </div>
                     <div>
                       <dt>Gross released</dt>
-                      <dd>150 USDC</dd>
+                      <dd>{money(payment.gross)} USDC</dd>
                     </div>
                     <div>
                       <dt>Illustrative provider fee (0.3%)</dt>
-                      <dd>0.45 USDC</dd>
+                      <dd>{money(payment.fee)} USDC</dd>
                     </div>
                     <div>
                       <dt>Illustrative platform fee</dt>
@@ -815,7 +949,7 @@ export default function Home() {
                     </div>
                     <div>
                       <dt>Net received</dt>
-                      <dd>149.55 USDC</dd>
+                      <dd>{money(payment.net)} USDC</dd>
                     </div>
                   </dl>
                   <p className="small muted">
@@ -844,10 +978,13 @@ export default function Home() {
               {state.stage === "disputed" ? (
                 <>
                   <span className="badge warning">Open case · sample data</span>
-                  <h2>Northstar website / Design</h2>
+                  <h2>
+                    {agreement.title} / {milestone.name}
+                  </h2>
                   <p>
-                    150 USDC held, including 150 USDC disputed. These are the
-                    same funds, not two balances.
+                    {money(funds.locked)} USDC held, including{" "}
+                    {money(funds.disputed)} USDC disputed. These are the same
+                    funds, not two balances.
                   </p>
                   <div className="terms-grid">
                     <div>

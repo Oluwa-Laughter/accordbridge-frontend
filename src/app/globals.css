@@ -1,5 +1,115 @@
 @import "tailwindcss";
 
+.agreement-editor,
+.agreement-review {
+  padding: 26px;
+}
+.agreement-editor > p {
+  margin: 12px 0 20px;
+  font-size: 13px;
+}
+.agreement-editor label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 16px 0;
+}
+.agreement-editor input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #cbd8ce;
+  border-radius: 6px;
+  font: inherit;
+  background: white;
+  margin-top: 7px;
+}
+.agreement-editor textarea {
+  margin-top: 7px;
+}
+.agreement-editor input:focus-visible {
+  outline: 3px solid #258371;
+  outline-offset: 3px;
+}
+.agreement-editor fieldset {
+  min-width: 0;
+  border: 1px solid #dce4df;
+  padding: 18px;
+  margin: 22px 0;
+  border-radius: 8px;
+}
+.agreement-editor legend {
+  font-weight: 600;
+  padding: 0 8px;
+}
+.agreement-editor .terms-grid {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.agreement-editor .button-row {
+  margin: 20px 0 12px;
+}
+.agreement-editor .form-errors {
+  padding: 16px;
+  border: 1px solid #b86f58;
+  border-radius: 7px;
+  background: #fff1ea;
+  color: #7b3a29;
+}
+.form-errors ul,
+.agreement-summary ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+.agreement-review details {
+  margin: 16px 0;
+  padding: 14px;
+  background: #f5f7f3;
+  border-radius: 6px;
+}
+.agreement-review summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.agreement-summary {
+  margin-top: 18px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.agreement-summary article {
+  padding: 15px 0;
+  border-bottom: 1px solid #dce4df;
+  margin-bottom: 15px;
+}
+.agreement-summary article p {
+  margin: 7px 0;
+  white-space: pre-wrap;
+}
+.version-history {
+  margin-top: 20px;
+}
+.page-heading h1,
+.page-heading p,
+.milestone,
+.project-name,
+.action-panel,
+.tab-content {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .agreement-editor,
+  .agreement-review {
+    padding: 18px;
+  }
+  .agreement-editor .terms-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 :root {
   --ink: #172e30;
   --muted: #687a7b;

@@ -1,3 +1,10 @@
+import {
+  Agreement,
+  payout,
+  sampleAgreement,
+  total,
+  validateAgreement,
+} from "./agreement";
 export type Role = "client" | "freelancer";
 export type Stage =
   | "agreement"
@@ -12,6 +19,13 @@ export type Stage =
   | "disputed";
 export type Submission = { version: number; notes: string };
 export type DemoState = {
+  agreement: Agreement;
+  agreementVersion: number;
+  history: {
+    agreement: Agreement;
+    version: number;
+    accepted: Record<Role, boolean>;
+  }[];
   stage: Stage;
   accepted: Record<Role, boolean>;
   submissions: Submission[];
@@ -19,7 +33,9 @@ export type DemoState = {
   activity: string[];
 };
 export type Action =
-  | { type: "accept"; role: Role }
+  | { type: "accept"; role: Role; version: number }
+  | { type: "publish-agreement"; agreement: Agreement; version: number }
+  | { type: "create-agreement"; agreement: Agreement }
   | { type: "fund"; role: Role }
   | { type: "funding-unknown" }
   | { type: "confirm-funding" }
@@ -34,6 +50,9 @@ export function initialState(
   scenario: "new" | "funded" | "review" = "new",
 ): DemoState {
   return {
+    agreement: sampleAgreement(),
+    agreementVersion: 1,
+    history: [],
     stage:
       scenario === "new"
         ? "agreement"
@@ -68,10 +87,46 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
     activity: [event, ...state.activity],
   });
   switch (action.type) {
+    case "create-agreement":
+      if (validateAgreement(action.agreement).length) return state;
+      return {
+        ...initialState(),
+        agreement: structuredClone(action.agreement),
+      };
+    case "publish-agreement":
+      if (
+        !["agreement", "unfunded"].includes(state.stage) ||
+        action.version !== state.agreementVersion ||
+        validateAgreement(action.agreement).length
+      )
+        return state;
+      if (JSON.stringify(action.agreement) === JSON.stringify(state.agreement))
+        return state;
+      return update(
+        {
+          agreement: structuredClone(action.agreement),
+          agreementVersion: state.agreementVersion + 1,
+          accepted: { client: false, freelancer: false },
+          stage: "agreement",
+          history: [
+            ...state.history,
+            {
+              agreement: structuredClone(state.agreement),
+              version: state.agreementVersion,
+              accepted: { ...state.accepted },
+            },
+          ],
+        },
+        `Agreement v${state.agreementVersion + 1} proposed. Both parties must accept again.`,
+      );
     case "reset":
       return initialState(action.scenario);
     case "accept": {
-      if (state.stage !== "agreement" || state.accepted[action.role])
+      if (
+        state.stage !== "agreement" ||
+        state.accepted[action.role] ||
+        action.version !== state.agreementVersion
+      )
         return state;
       const accepted = { ...state.accepted, [action.role]: true };
       return update(
@@ -80,7 +135,7 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
           stage:
             accepted.client && accepted.freelancer ? "unfunded" : "agreement",
         },
-        `${action.role === "client" ? "Maya" : "Tobi"} accepted agreement v1 in this demo.`,
+        `${action.role === "client" ? "Maya" : "Tobi"} accepted agreement v${state.agreementVersion} in this demo.`,
       );
     }
     case "fund":
@@ -100,7 +155,7 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
         return state;
       return update(
         { stage: "working" },
-        "Sample design funding confirmed: 150 USDC. Other milestones remain unfunded.",
+        `Sample ${state.agreement.milestones[0].name} funding confirmed: ${state.agreement.milestones[0].amount} USDC. Other milestones remain unfunded.`,
       );
     case "submit":
       if (
@@ -118,7 +173,7 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
             { version, notes: action.notes.trim() },
           ],
         },
-        `Tobi submitted design v${version}.`,
+        `Tobi submitted ${state.agreement.milestones[0].name} v${version} under agreement v${state.agreementVersion}.`,
       );
     case "revise":
       if (
@@ -141,7 +196,7 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
       if (state.stage !== "payment-pending") return state;
       return update(
         { stage: "released" },
-        "Simulated payout confirmed: 149.55 USDC net to Tobi, 0.45 USDC illustrative provider fee.",
+        `Simulated payout confirmed: ${payout(state.agreement.milestones[0].amount).net} USDC net to Tobi, ${payout(state.agreement.milestones[0].amount).fee} USDC illustrative provider fee.`,
       );
     case "dispute":
       if (!["working", "review", "revision"].includes(state.stage))
@@ -161,14 +216,18 @@ export function balances(state: DemoState) {
     "payment-pending",
     "disputed",
   ].includes(state.stage)
-    ? 150
+    ? payout(state.agreement.milestones[0].amount).gross
     : 0;
-  const released = state.stage === "released" ? 150 : 0;
+  const released =
+    state.stage === "released"
+      ? payout(state.agreement.milestones[0].amount).gross
+      : 0;
   return {
     locked,
     released,
-    disputed: state.stage === "disputed" ? 150 : 0,
-    unfunded: 600 - locked - released,
+    disputed: state.stage === "disputed" ? locked : 0,
+    unfunded:
+      Math.round((total(state.agreement) - locked - released) * 100) / 100,
   };
 }
 
