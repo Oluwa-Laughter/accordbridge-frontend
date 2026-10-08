@@ -26,7 +26,7 @@ Vercel remains the intended frontend host. Hosting, domains, production proxy/co
 
 The workspace supports multiple projects. Only participants see their projects, and each author's unpublished drafts remain private. Sessions use HttpOnly cookies, not browser storage tokens. Sign-out revokes the server session. Edited text is not saved until a save or publish request succeeds; unsaved edits are lost on refresh. A conflict keeps the editor visible and offers an explicit reload/discard action.
 
-Accounts and agreement data persist in PostgreSQL. First-milestone test-token funding, release and mutual refund are connected. Deliverable submission and work review remain unimplemented. Agreements currently use proposed development terms, not final live escrow policies. No funds move when accepting.
+Accounts and agreement data persist in PostgreSQL. First-milestone test-token funding, release and mutual refund are connected. Versioned first-milestone delivery links, client review and revision requests are connected. Agreements currently use proposed development terms, not final live escrow policies. No funds move when accepting.
 
 ## Payment demo
 
@@ -75,10 +75,22 @@ Configure the backend using its [testnet guide](https://github.com/accordbridge-
 2. The client selects **Prepare milestone escrow**, reviews, signs, and uses **Check transaction & chain state** until deployment is confirmed. Preparing locks terms even if signing is cancelled.
 3. Both participants choose **Approve terms with wallet**, sign and check confirmation.
 4. The client gets ABUSD from the faucet, checks, prepares funding, signs and checks again. The interface shows funded only from a verified chain snapshot.
-5. The client can release to the freelancer; alternatively, each participant approves a mutual refund. Check after every signature. A single refund vote does not move funds or freeze client release.
+5. Submit and approve the first milestone’s work, then the client can release to the freelancer; alternatively, each participant approves a mutual refund. Check after every signature. A single refund vote does not move funds or freeze client release.
 
 ABUSD has no monetary value and is not USDC. Existing nominal agreement amounts map to the same number of ABUSD only for this experiment. Only the first milestone is supported, with zero platform/provider fees and test-XLM network fees. There is no resolver, dispute freeze, automatic release, wallet recovery or storage-restoration workflow. This contract is unaudited and is not a production-provider selection.
 
 Cancelled signing leaves one prepared intent that can be resumed. Unknown submission keeps the existing hash pending and blocks another action. The check endpoint permits retry only after verified failure or expiry with sufficient retained ledger history; a missing history window requires investigation. A last-checked timestamp is a snapshot, not continuous monitoring.
 
 The backend and contracts record real testnet signature/transaction evidence. Automated browser checks do not drive the Freighter extension; manual extension approval remains a release check.
+
+## Submit and review deliverables
+
+After confirming first-milestone funding, the freelancer uses **Deliverables & review** to submit delivery notes and up to ten HTTPS links. The client refreshes the project, reviews the linked work against the accepted criteria, and approves or requests revisions with feedback. Revisions are capped by the agreement. Each resubmission preserves earlier versions and starts a new review deadline, shown in UTC.
+
+Approval enables **Review release to freelancer**. This is a separate wallet action; work approval never represents payment confirmation. The current contract can still be called directly by the client without an app review. A review deadline does not automatically release tokens or start a dispute.
+
+If actions are unavailable, use **Check transaction & chain state**: submission and review require a funded snapshot checked within five minutes, with no pending transaction. Work history remains visible after settlement.
+
+Delivery links are shared with the project partner and open externally. AccordBridge stores the submitted URL and notes, not the file contents; grant destination access yourself. Uploads, immutable file evidence, notifications and multiple-milestone delivery remain future work.
+
+The connected browser suite now covers submission, revision, approval, preserved history and the separate release action on desktop and mobile, using synthetic chain snapshots in the isolated database.

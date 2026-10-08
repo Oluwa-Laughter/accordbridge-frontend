@@ -1,4 +1,5 @@
 "use client";
+import { WorkReview } from "@/components/work-review";
 import { TestnetEscrow } from "@/components/testnet-escrow";
 
 import { useEffect, useState } from "react";
@@ -710,6 +711,13 @@ export default function Workspace() {
                         />
                       </fieldset>
                     </>
+                  )}
+                  {current && (
+                    <WorkReview
+                      key={`work-${project.id}`}
+                      project={project}
+                      onChange={() => loadProject(project.id)}
+                    />
                   )}
                   {current && (
                     <TestnetEscrow

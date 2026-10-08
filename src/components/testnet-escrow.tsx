@@ -18,6 +18,7 @@ type Intent = {
   expiresAt: string;
 };
 type Status = {
+  approvedSubmissionId: string | null;
   clientWallet: string | null;
   freelancerWallet: string | null;
   escrow: null | {
@@ -137,7 +138,7 @@ export function TestnetEscrow({
     return () => {
       active = false;
     };
-  }, [project.id]);
+  }, [project]);
   async function run(work: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -408,10 +409,12 @@ export function TestnetEscrow({
                   {isClient && (
                     <button
                       className="primary"
-                      disabled={busy}
+                      disabled={busy || !status?.approvedSubmissionId}
                       onClick={() => prepare("release")}
                     >
-                      Review release to freelancer
+                      {status?.approvedSubmissionId
+                        ? "Review release to freelancer"
+                        : "Approve submitted work before release"}
                     </button>
                   )}
                   <button
