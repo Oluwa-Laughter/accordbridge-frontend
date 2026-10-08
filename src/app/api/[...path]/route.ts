@@ -8,7 +8,7 @@ async function proxy(
   context: { params: Promise<{ path: string[] }> },
 ) {
   const { path } = await context.params;
-  if (!["auth", "projects", "health"].includes(path[0]))
+  if (!["auth", "projects", "health", "testnet"].includes(path[0]))
     return Response.json({ message: "Not found." }, { status: 404 });
   const base = process.env.BACKEND_URL ?? "http://127.0.0.1:4000";
   const headers = new Headers();

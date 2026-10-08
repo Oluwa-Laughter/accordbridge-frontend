@@ -101,6 +101,62 @@ test("two authenticated participants save, resume, publish and accept versioned 
     await expect(
       page.getByText("Accepted by both", { exact: true }),
     ).toBeVisible();
+    // A mocked unknown transaction must never appear as funded or permit another deposit.
+    await page.route("**/api/testnet/wallet", (route) =>
+      route.fulfill({ json: { enabled: true, address: "G".repeat(56) } }),
+    );
+    await page.route("**/api/testnet/projects/*", (route) =>
+      route.fulfill({
+        json: {
+          clientWallet: "G".repeat(56),
+          freelancerWallet: "G".repeat(56),
+          escrow: {
+            contractId: null,
+            termsHash: "a".repeat(64),
+            amountBaseUnits: "2255000000",
+            tokenContract: "C".repeat(56),
+            checkedAt: null,
+            state: null,
+          },
+          intents: [
+            {
+              id: "pending-fixture",
+              action: "deploy",
+              hash: "b".repeat(64),
+              state: "submitted",
+              userId: "fixture",
+              expiresAt: "0",
+            },
+          ],
+        },
+      }),
+    );
+    await page.reload();
+    const escrow = page.getByRole("region", { name: "Stellar testnet escrow" });
+    await expect(
+      escrow.getByText("Escrow not confirmed", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      escrow.getByText(/Submitted; outcome not yet confirmed/),
+    ).toBeVisible();
+    await expect(
+      escrow.getByRole("button", { name: "Prepare milestone escrow" }),
+    ).toHaveCount(0);
+    await expect(
+      escrow.getByText("Funded on testnet", { exact: true }),
+    ).toHaveCount(0);
+    await escrow.getByText("Inspect frozen terms and contract").click();
+    await expect(
+      escrow.getByText("Verified held balance: Unavailable"),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await page.unroute("**/api/testnet/wallet");
+    await page.unroute("**/api/testnet/projects/*");
+    await page.reload();
     await page
       .getByRole("button", { name: "Propose changes", exact: true })
       .click();

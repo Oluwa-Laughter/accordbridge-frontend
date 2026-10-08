@@ -1,6 +1,6 @@
 # AccordBridge Frontend
 
-**Status: connected local development workspace.** Next.js, React, TypeScript and Tailwind CSS provide authenticated projects backed by the NestJS/PostgreSQL service. The separate `/demo` route retains the sample payment simulator. No wallet connection, blockchain integration or hosted deployment is configured.
+**Status: connected local development workspace.** Next.js, React, TypeScript and Tailwind CSS provide authenticated projects backed by the NestJS/PostgreSQL service. The separate `/demo` route retains the sample payment simulator. Freighter wallet verification and experimental Stellar testnet escrow are available when configured on the backend. Hosted deployment is not configured.
 
 ## Run locally
 
@@ -26,7 +26,7 @@ Vercel remains the intended frontend host. Hosting, domains, production proxy/co
 
 The workspace supports multiple projects. Only participants see their projects, and each author's unpublished drafts remain private. Sessions use HttpOnly cookies, not browser storage tokens. Sign-out revokes the server session. Edited text is not saved until a save or publish request succeeds; unsaved edits are lost on refresh. A conflict keeps the editor visible and offers an explicit reload/discard action.
 
-Accounts and agreement data persist in PostgreSQL. Funding, deliverable submission, review and payouts are not connected to this saved workspace yet. Agreements currently use proposed development terms, not final live escrow policies. No funds move when accepting.
+Accounts and agreement data persist in PostgreSQL. First-milestone test-token funding, release and mutual refund are connected. Deliverable submission and work review remain unimplemented. Agreements currently use proposed development terms, not final live escrow policies. No funds move when accepting.
 
 ## Payment demo
 
@@ -55,7 +55,7 @@ Connected browser checks use two authenticated accounts to save/resume drafts ac
 
 The frontend sends no caller role or user ID when accepting; the API derives both from the authenticated session and project membership. The same-origin proxy forwards only the required cookie, JSON, origin and anti-CSRF headers. Backend errors remain visible; an HTTP response is never presented as a chain payment.
 
-Email verification, password recovery, invitations, account deletion, file uploads, real wallet ownership, payments, notifications and production operations are not implemented. Keep this as a local development service until those launch decisions and operational controls are reviewed.
+Email verification, password recovery, invitations, account deletion, file uploads, mainnet payments, notifications and production operations are not implemented. Keep this as a local development service until those launch decisions and operational controls are reviewed.
 
 ## Documents
 
@@ -66,3 +66,19 @@ Email verification, password recovery, invitations, account deletion, file uploa
 - [Contract evaluation](https://github.com/accordbridge-labs/accordbridge-contracts)
 
 License selection is pending.
+
+## Try Stellar testnet escrow
+
+Configure the backend using its [testnet guide](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/TESTNET.md). In two desktop browser profiles, use separate Freighter wallets set to **Stellar Testnet**. Each participant links their wallet in a published project's escrow panel and signs a never-broadcast ownership proof. Wallet replacement is not implemented. Use the Friendbot link to obtain free test XLM for each wallet.
+
+1. Both participants accept the same application agreement.
+2. The client selects **Prepare milestone escrow**, reviews, signs, and uses **Check transaction & chain state** until deployment is confirmed. Preparing locks terms even if signing is cancelled.
+3. Both participants choose **Approve terms with wallet**, sign and check confirmation.
+4. The client gets ABUSD from the faucet, checks, prepares funding, signs and checks again. The interface shows funded only from a verified chain snapshot.
+5. The client can release to the freelancer; alternatively, each participant approves a mutual refund. Check after every signature. A single refund vote does not move funds or freeze client release.
+
+ABUSD has no monetary value and is not USDC. Existing nominal agreement amounts map to the same number of ABUSD only for this experiment. Only the first milestone is supported, with zero platform/provider fees and test-XLM network fees. There is no resolver, dispute freeze, automatic release, wallet recovery or storage-restoration workflow. This contract is unaudited and is not a production-provider selection.
+
+Cancelled signing leaves one prepared intent that can be resumed. Unknown submission keeps the existing hash pending and blocks another action. The check endpoint permits retry only after verified failure or expiry with sufficient retained ledger history; a missing history window requires investigation. A last-checked timestamp is a snapshot, not continuous monitoring.
+
+The backend and contracts record real testnet signature/transaction evidence. Automated browser checks do not drive the Freighter extension; manual extension approval remains a release check.
