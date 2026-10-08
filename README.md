@@ -94,3 +94,9 @@ If actions are unavailable, use **Check transaction & chain state**: submission 
 Delivery links are shared with the project partner and open externally. AccordBridge stores the submitted URL and notes, not the file contents; grant destination access yourself. Uploads, immutable file evidence, notifications and multiple-milestone delivery remain future work.
 
 The connected browser suite now covers submission, revision, approval, preserved history and the separate release action on desktop and mobile, using synthetic chain snapshots in the isolated database.
+
+## Vercel deployment
+
+Import this repository with Next.js, Node 24.x, root directory `.`, and the commands in `vercel.json`. Add the deployed API's HTTPS origin as **BACKEND_URL** in Vercel's Production environment, without `/api` or a trailing slash, then redeploy. This is a server-only variable. Do not upload local environment files or wallet fixture keys.
+
+The companion backend includes `render.yaml` and a [step-by-step hosting guide](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/HOSTING.md). Backend FRONTEND_ORIGIN must match the stable Vercel production origin exactly. Preview URLs need their own backend/origin configuration. The free Render database is temporary and expires after 30 days; this setup is a testnet demo. Hosted cookie, wallet and payment checks remain necessary after provisioning.
