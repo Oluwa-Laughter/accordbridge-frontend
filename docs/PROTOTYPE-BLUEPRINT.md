@@ -1,6 +1,6 @@
 # AccordBridge prototype blueprint — draft 0.1
 
-Status: design proposal, not an implemented application. This document expands [SCREENS.md](SCREENS.md). Product rules remain governed by the [backend specification](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/PRODUCT.md); illustrative policy values below do not settle open business decisions.
+Status: target design, partially implemented as a local sample-data prototype. See the [README](../README.md) for implemented flows and remaining gaps. This document expands [SCREENS.md](SCREENS.md). Product rules remain governed by the [backend specification](https://github.com/accordbridge-labs/accordbridge-backend/blob/main/docs/PRODUCT.md); illustrative policy values below do not settle open business decisions.
 
 ## Purpose and prototype boundary
 
@@ -135,4 +135,4 @@ For the prototype, transaction references must be visibly synthetic and must not
 
 ## Next deliverable
 
-A visual, clickable prototype based on this blueprint, after design review and authorization to implement the prototype. This document does not select an escrow provider or authorize production deployment.
+Review the first clickable implementation, then extend it to agreement editing, scope changes, cancellations, and deadline escalation. This document does not select an escrow provider or authorize production deployment.
