@@ -190,3 +190,26 @@
 .testnet-card summary {
   cursor: pointer;
 }
+
+.work-review textarea {
+  width: 100%;
+  min-height: 100px;
+  margin: 8px 0 16px;
+  padding: 12px;
+  border: 1px solid #d4d8dd;
+  border-radius: 8px;
+  font: inherit;
+}
+.work-review label {
+  display: block;
+  margin-top: 16px;
+}
+.submission-record {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #d4d8dd;
+  overflow-wrap: anywhere;
+}
+.work-text {
+  white-space: pre-wrap;
+}
