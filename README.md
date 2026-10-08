@@ -37,9 +37,19 @@ Open http://127.0.0.1:3000. The server binds to your machine's loopback interfac
 
 The scenario controls load an agreement, funded work, or a submitted design. The demo role switch is for presentation only and is not authentication. No wallet permissions, private keys, files, or payments are collected. Use sample text only.
 
-Implemented: overview, fixed sample agreement acceptance, funding/payout states, immutable submission versions, revision requests, pending dispute case, sample receipt, and responsive navigation.
+Implemented: overview, editable agreements and milestones, in-memory drafts, proposal version history, acceptance by both parties, funding/payout states, immutable submission versions, revision requests, pending dispute case, sample receipt, and responsive navigation. Funding and receipts use the current agreement's first milestone amount.
 
-Not implemented: editable agreement creation/version negotiation, paid change requests, cancellation/refund settlement, review timers, real resolver operations, notifications, persistence, or production authorization. Disputes stop at a visibly pending decision. The blueprint describes the broader target; this first slice does not complete every scenario.
+Not implemented: paid changes to funded work, cancellation/refund settlement, review timers, real resolver operations, notifications, persistence, or production authorization. The funding-to-payout simulation covers the first milestone only; later milestones remain unfunded. Disputes stop at a visibly pending decision. The blueprint describes the broader target; this prototype does not complete every scenario.
+
+## Create and revise an agreement
+
+Choose **Create agreement** from Overview. Enter project details, add up to ten milestones with prices, deliverables, acceptance criteria and dates, then set exclusions, revision rounds and the review window. Participants remain the fictional Maya and Tobi; dates use 17:00 WAT (UTC+1).
+
+**Save draft & close** keeps incomplete edits in memory without changing the published agreement. **Resume saved draft** reopens them. **Send for review** validates required fields and publishes the proposal. Creating a project replaces the current project in this single-project demo; the editor displays this before publishing. Refreshing or resetting clears drafts.
+
+Before funding starts, either demo role can use **Propose changes**. A changed proposal creates the next version, preserves the old terms and acceptance record, and clears both current acceptances. Stale-version acceptance is rejected. Both parties must accept the new version before funding becomes available. Once funding starts, terms are locked; a separate paid-change workflow remains to be implemented.
+
+Prototype prices allow two decimal places and use integer cents for calculations. The illustrative 0.3% fee rounds to cents. This is a presentation rule, not a specification of Stellar asset precision or a provider's actual fee calculation. Resolver, cancellation, appeal and final pricing terms remain unresolved and cannot be accepted as live terms.
 
 ## Checks
 

@@ -135,4 +135,4 @@ For the prototype, transaction references must be visibly synthetic and must not
 
 ## Next deliverable
 
-Review the first clickable implementation, then extend it to agreement editing, scope changes, cancellations, and deadline escalation. This document does not select an escrow provider or authorize production deployment.
+Agreement editing, saved in-memory drafts, and proposal version history are now implemented. Review those flows, then extend the prototype to paid scope changes, cancellations, and deadline escalation. This document does not select an escrow provider or authorize production deployment.
