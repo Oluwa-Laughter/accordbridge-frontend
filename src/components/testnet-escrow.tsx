@@ -412,7 +412,9 @@ export function TestnetEscrow({
                 {pending?.action ?? "Existing intent"}:{" "}
                 {pending?.state === "prepared"
                   ? "Awaiting wallet signing or expiry"
-                  : "Submitted or interrupted; outcome not yet confirmed"}
+                  : pending?.state === "submitted"
+                    ? "Submitted; outcome not yet confirmed"
+                    : "Interrupted submission; outcome not yet confirmed"}
                 . Check the existing transaction before another action.
               </p>
               <code>{pending?.hash ?? uncertain?.hash ?? "Check the current intent"}</code>
