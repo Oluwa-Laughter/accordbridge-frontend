@@ -269,6 +269,11 @@ export function TestnetEscrow({
         can move tokens, and there is no automatic timeout release. Preparing
         deployment locks this agreement even if you cancel wallet signing.
       </p>
+      {busy && (
+        <p className="small" role="status" aria-live="polite">
+          Checking or preparing a testnet action… Do not submit another request.
+        </p>
+      )}
       {error && (
         <div className="workspace-error" role="alert">
           <p>{error}</p>
