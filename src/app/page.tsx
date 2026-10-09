@@ -3,7 +3,7 @@ import { WorkReview } from "@/components/work-review";
 import { ConnectionCheck } from "@/components/connection-check";
 import { TestnetEscrow } from "@/components/testnet-escrow";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   FolderKanban,
@@ -25,6 +25,7 @@ export default function Workspace() {
   const [user, setUser] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const running = useRef(false);
   const [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false);
   const [notice, setNotice] = useState("");
@@ -90,7 +91,8 @@ export default function Workspace() {
     }
   }
   async function run(action: () => Promise<void>) {
-    if (busy) return;
+    if (running.current) return;
+    running.current = true;
     setBusy(true);
     setError("");
     setUnavailable(false);
@@ -100,6 +102,7 @@ export default function Workspace() {
     } catch (cause) {
       fail(cause);
     } finally {
+      running.current = false;
       setBusy(false);
     }
   }
@@ -270,6 +273,7 @@ export default function Workspace() {
           <span>Agreements are saved to your account</span>
         </div>
         <main id="main">
+          {busy && <p className="small" role="status" aria-live="polite">Processing your request…</p>}
           {error && (
             <div className="workspace-error" role="alert">
               <p>{error}</p>
