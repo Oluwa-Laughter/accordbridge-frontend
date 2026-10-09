@@ -1,5 +1,6 @@
 "use client";
 import { WorkReview } from "@/components/work-review";
+import { ConnectionCheck } from "@/components/connection-check";
 import { TestnetEscrow } from "@/components/testnet-escrow";
 
 import { useEffect, useState } from "react";
@@ -16,7 +17,7 @@ import {
   AgreementSummary,
 } from "@/components/agreement-editor";
 import { Agreement, emptyAgreement, total } from "@/lib/agreement";
-import { Account, api, ApiError, Project, ProjectSummary } from "@/lib/api";
+import { Account, api, ApiError, Project, ProjectSummary, serviceUnavailable } from "@/lib/api";
 
 type Editor = { agreement: Agreement; baseVersion: number; revision: number };
 
@@ -25,6 +26,7 @@ export default function Workspace() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [unavailable, setUnavailable] = useState(false);
   const [notice, setNotice] = useState("");
   const [register, setRegister] = useState(false);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -34,6 +36,7 @@ export default function Workspace() {
   const [showId, setShowId] = useState(false);
 
   function fail(cause: unknown) {
+    setUnavailable(serviceUnavailable(cause));
     setError(
       cause instanceof Error
         ? cause.message
@@ -50,11 +53,13 @@ export default function Workspace() {
     const data = await api<{ projects: ProjectSummary[] }>("/projects");
     setProjects(data.projects);
   }
-  async function loadProject(id: string) {
+  async function loadProject(id: string, preserveEdits = false) {
     const data = await api<Project>(`/projects/${id}`);
     setProject(data);
-    setEditor(null);
-    setCreating(false);
+    if (!preserveEdits) {
+      setEditor(null);
+      setCreating(false);
+    }
     window.history.replaceState(
       null,
       "",
@@ -62,10 +67,33 @@ export default function Workspace() {
     );
     return data;
   }
+  async function recoverWorkspace() {
+    // Reads only. No mutations are repeated after a timeout.
+    try {
+      const account = await api<{ user: Account }>("/auth/me");
+      const list = await api<{ projects: ProjectSummary[] }>("/projects");
+      setUser(account.user);
+      setProjects(list.projects);
+      const selected =
+        project?.id ?? new URLSearchParams(window.location.search).get("project");
+      if (selected) await loadProject(selected, true);
+      setUnavailable(false);
+      setError("");
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401) {
+        setUser(null);
+        setUnavailable(false);
+        setError("");
+        return;
+      }
+      throw cause;
+    }
+  }
   async function run(action: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
     setError("");
+    setUnavailable(false);
     setNotice("");
     try {
       await action();
@@ -94,12 +122,14 @@ export default function Workspace() {
           if (active) setProject(current);
         }
       } catch (cause) {
-        if (active && !(cause instanceof ApiError && cause.status === 401))
+        if (active && !(cause instanceof ApiError && cause.status === 401)) {
+          setUnavailable(serviceUnavailable(cause));
           setError(
             cause instanceof Error
               ? cause.message
               : "Unable to load the workspace.",
           );
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -243,13 +273,14 @@ export default function Workspace() {
           {error && (
             <div className="workspace-error" role="alert">
               <p>{error}</p>
-              {editor && (
+              {(editor || creating) && (
                 <p>
-                  Your edits remain in the editor. For a version conflict, copy
-                  your changes before reloading the project.
+                  Your entered data remains on this page. Check existing records
+                  before repeating any submission with an uncertain outcome.
                 </p>
               )}
-              {project && (
+              {unavailable && <ConnectionCheck onRecovered={recoverWorkspace} />}
+              {project && !unavailable && (
                 <button
                   className="secondary"
                   disabled={busy}
@@ -539,7 +570,7 @@ export default function Workspace() {
                       disabled={busy}
                       onClick={() =>
                         run(async () => {
-                          await loadProject(project.id);
+                          await loadProject(project.id, true);
                         })
                       }
                     >
@@ -716,7 +747,7 @@ export default function Workspace() {
                     <WorkReview
                       key={`work-${project.id}`}
                       project={project}
-                      onChange={() => loadProject(project.id)}
+                      onChange={() => loadProject(project.id, true)}
                     />
                   )}
                   {current && (
