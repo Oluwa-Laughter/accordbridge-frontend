@@ -56,7 +56,7 @@ export function WorkReview({
     return () => {
       active = false;
     };
-  }, [project.id]);
+  }, [project]);
   async function refreshWork() {
     const current = await api<Work>(`/projects/${project.id}/work`);
     setWork(current);
