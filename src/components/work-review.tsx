@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, Project, serviceUnavailable } from "@/lib/api";
 import { ConnectionCheck } from "@/components/connection-check";
 
@@ -31,6 +31,7 @@ export function WorkReview({
   const [links, setLinks] = useState("");
   const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
+  const running = useRef(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [unavailable, setUnavailable] = useState(false);
@@ -68,7 +69,8 @@ export function WorkReview({
     success: string,
     afterConfirmed?: () => void,
   ) {
-    if (busy) return;
+    if (running.current) return;
+    running.current = true;
     setBusy(true);
     setError("");
     setMessage("");
@@ -91,6 +93,7 @@ export function WorkReview({
               : ""),
       );
     } finally {
+      running.current = false;
       setBusy(false);
     }
   }
@@ -114,6 +117,7 @@ export function WorkReview({
         client’s separate wallet signature. The experimental contract permits
         client release outside this app without a recorded review.
       </p>
+      {busy && <p className="small" role="status" aria-live="polite">Saving or checking your work…</p>}
       {error && (
         <div className="workspace-error" role="alert">
           <p>{error}</p>
