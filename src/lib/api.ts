@@ -80,11 +80,23 @@ export async function api<T>(
     );
   }
   // A gateway or sleeping backend can also return an empty/non-JSON body.
-  const data: {
+  let data: {
     message?: string;
     outcome?: RequestOutcome;
     errors?: { field: string; message: string }[];
-  } = await response.json().catch(() => ({}));
+  };
+  try {
+    data = await response.json();
+  } catch {
+    // A missing/truncated successful write response cannot prove the write failed.
+    throw new ApiError(
+      read
+        ? "The workspace service returned an unreadable response. Check the connection."
+        : "The server response was interrupted. The action may have succeeded; inspect saved or on-chain state before retrying.",
+      503,
+      read ? "read_unavailable" : "unknown",
+    );
+  }
   if (!response.ok)
     throw new ApiError(
       data.errors
